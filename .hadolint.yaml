@@ -1,0 +1,4 @@
+ignored:
+  - DL3018  # apk version pinning — impractical for a base image
+  - DL3013
+  - SC2086
