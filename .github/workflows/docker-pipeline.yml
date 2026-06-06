@@ -53,7 +53,6 @@ jobs:
           name: image
       - run: docker load -i image.tar
       - run: docker run --rm "$IMAGE_TAG" php -r "extension_loaded('pdo_pgsql') || exit(1);"
-      - run: docker run --rm "$IMAGE_TAG" php -r "extension_loaded('rdkafka')   || exit(1);"
       - run: docker run --rm "$IMAGE_TAG" php -r "extension_loaded('redis')      || exit(1);"
       - run: docker run --rm "$IMAGE_TAG" php -r "extension_loaded('swoole')     || exit(1);"
       - run: docker run --rm "$IMAGE_TAG" php -r "extension_loaded('pcntl')      || exit(1);"

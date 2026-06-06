@@ -18,6 +18,7 @@ RUN apk upgrade --no-cache \
         ca-certificates \
         git \
         libpq \
+        libstdc++ \
         openssl \
         tzdata \
         unzip \
