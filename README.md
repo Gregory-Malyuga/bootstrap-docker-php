@@ -1,15 +1,15 @@
 # php-octane-base-image
 
-Production-oriented Laravel Octane + Swoole base image for PHP microservices.
+Production-oriented Laravel Octane + FrankenPHP base image for PHP microservices.
 
-The image ships PHP CLI with Swoole and a curated set of runtime extensions. It contains no application code — the consuming service copies its own code on top and runs Laravel Octane.
+The image ships PHP with FrankenPHP and a curated set of runtime extensions. It contains no application code — the consuming service copies its own code on top and runs Laravel Octane.
 
 ## Runtime contract
 
-- PHP `8.5-cli-alpine`
+- `dunglas/frankenphp:1.12-php8.5-alpine` base
 - `APP_ENV=prod` by default (override at runtime with `-e APP_ENV=...`)
 - Composer 2
-- Octane (Swoole) on port `8000`
+- Octane (FrankenPHP) on port `8000`
 - Healthcheck via HTTP `GET /up`
 - Production PHP and OPcache settings in `docker/php/`
 
@@ -17,15 +17,17 @@ The image ships PHP CLI with Swoole and a curated set of runtime extensions. It 
 
 Installed explicitly:
 
-- `swoole` — application server for Laravel Octane
-- `pcntl` — signal handling for graceful shutdown
-- `sockets` — required by Swoole internals
+- `pcntl` — signal handling for graceful shutdown / Octane reload
+- `sockets` — required by PHP networking internals
 - `pdo_pgsql`
 - `redis`
 
-Optional for local test coverage builds:
+FrankenPHP itself is part of the base image (`dunglas/frankenphp`) — no separate extension needed.
+
+Optional for local dev/test builds:
 
 - `pcov` when built with `--build-arg INSTALL_PCOV=1`
+- `xdebug` when built with `--build-arg INSTALL_XDEBUG=1`
 
 Provided by the upstream PHP image:
 
@@ -35,7 +37,6 @@ Provided by the upstream PHP image:
 
 - `docker/php/conf.d/10-php.ini`: base production PHP settings (`max_execution_time=0` — Octane is a long-lived process)
 - `docker/php/conf.d/20-opcache.ini`: production OPcache settings (`enable_cli=1` required for Octane; `jit=0` + `jit_buffer_size=0` — JIT off by default, override both in the consuming service)
-- `docker/php/conf.d/30-swoole.ini`: `swoole.use_shortname=Off`
 
 ## Build
 
@@ -47,6 +48,12 @@ Build with pcov for local coverage runs:
 
 ```bash
 docker build --build-arg INSTALL_PCOV=1 -t php-octane-base:coverage .
+```
+
+Build with xdebug for local debugging:
+
+```bash
+docker build --build-arg INSTALL_XDEBUG=1 -t php-octane-base:dev .
 ```
 
 In a consuming service's `docker-compose.yml`:
@@ -73,7 +80,7 @@ The pipeline performs:
 
 - Dockerfile lint with Hadolint
 - Docker image build
-- PHP extension smoke checks for `pdo_pgsql`, `redis`, `swoole`, `pcntl`, `sockets`
+- PHP extension smoke checks for `pdo_pgsql`, `redis`, `pcntl`, `sockets`
 - Trivy HIGH/CRITICAL image vulnerability scan
 - Registry push from the default branch
 
@@ -92,7 +99,7 @@ USER www-data
 Laravel Octane starts automatically via the inherited `CMD`. To override the port or worker count:
 
 ```dockerfile
-CMD ["php", "artisan", "octane:start", "--server=swoole", "--host=0.0.0.0", "--port=8000", "--workers=4"]
+CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8000", "--workers=4"]
 ```
 
 Add extra Alpine packages or PHP extensions in the consuming service image rather than expanding this shared base.

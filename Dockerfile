@@ -1,8 +1,9 @@
-FROM php:8.5-cli-alpine
+FROM dunglas/frankenphp:1.12-php8.5-alpine
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 ARG INSTALL_PCOV=0
+ARG INSTALL_XDEBUG=0
 
 ENV APP_ENV=prod \
     COMPOSER_ALLOW_SUPERUSER=1 \
@@ -14,19 +15,15 @@ WORKDIR /var/www/app
 
 RUN apk upgrade --no-cache \
     && apk add --no-cache \
-        brotli-libs \
         ca-certificates \
         git \
         libpq \
-        libstdc++ \
         openssl \
         tzdata \
         unzip \
     && apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
-        brotli-dev \
         linux-headers \
-        openssl-dev \
         postgresql-dev \
     && docker-php-ext-install -j"$(nproc)" \
         pcntl \
@@ -34,13 +31,15 @@ RUN apk upgrade --no-cache \
         sockets \
     && pecl install \
         redis \
-        swoole \
     && docker-php-ext-enable \
         redis \
-        swoole \
     && if [ "$INSTALL_PCOV" = "1" ]; then \
         pecl install pcov; \
         docker-php-ext-enable pcov; \
+    fi \
+    && if [ "$INSTALL_XDEBUG" = "1" ]; then \
+        pecl install xdebug; \
+        docker-php-ext-enable xdebug; \
     fi \
     && apk del .build-deps \
     && rm -rf /tmp/pear ~/.pearrc \
@@ -57,4 +56,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
     CMD wget -qO- http://127.0.0.1:8000/up || exit 1
 
-CMD ["php", "artisan", "octane:start", "--server=swoole", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8000"]
