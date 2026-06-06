@@ -2,9 +2,6 @@ FROM dunglas/frankenphp:1.12-php8.5-alpine
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
-ARG INSTALL_PCOV=0
-ARG INSTALL_XDEBUG=0
-
 ENV APP_ENV=prod \
     COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_HOME=/tmp/composer \
@@ -33,14 +30,6 @@ RUN apk upgrade --no-cache \
         redis \
     && docker-php-ext-enable \
         redis \
-    && if [ "$INSTALL_PCOV" = "1" ]; then \
-        pecl install pcov; \
-        docker-php-ext-enable pcov; \
-    fi \
-    && if [ "$INSTALL_XDEBUG" = "1" ]; then \
-        pecl install xdebug; \
-        docker-php-ext-enable xdebug; \
-    fi \
     && apk del .build-deps \
     && rm -rf /tmp/pear ~/.pearrc \
     && chown www-data:www-data /var/www/app
