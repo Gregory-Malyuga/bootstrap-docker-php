@@ -6,7 +6,9 @@ ARG INSTALL_PCOV=0
 
 ENV APP_ENV=prod \
     COMPOSER_ALLOW_SUPERUSER=1 \
-    COMPOSER_HOME=/tmp/composer
+    COMPOSER_HOME=/tmp/composer \
+    COMPOSER_NO_INTERACTION=1 \
+    COMPOSER_PROCESS_TIMEOUT=600
 
 WORKDIR /var/www/app
 
@@ -15,13 +17,11 @@ RUN apk upgrade --no-cache \
         ca-certificates \
         git \
         libpq \
-        librdkafka \
         openssl \
         tzdata \
         unzip \
     && apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
-        librdkafka-dev \
         linux-headers \
         openssl-dev \
         postgresql-dev \
@@ -30,11 +30,9 @@ RUN apk upgrade --no-cache \
         pdo_pgsql \
         sockets \
     && pecl install \
-        rdkafka \
         redis \
         swoole \
     && docker-php-ext-enable \
-        rdkafka \
         redis \
         swoole \
     && if [ "$INSTALL_PCOV" = "1" ]; then \

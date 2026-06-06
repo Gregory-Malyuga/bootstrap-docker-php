@@ -21,7 +21,6 @@ Installed explicitly:
 - `pcntl` — signal handling for graceful shutdown
 - `sockets` — required by Swoole internals
 - `pdo_pgsql`
-- `rdkafka`
 - `redis`
 
 Optional for local test coverage builds:
@@ -34,8 +33,8 @@ Provided by the upstream PHP image:
 
 ## Configuration files
 
-- `docker/php/conf.d/10-php.ini`: base production PHP settings
-- `docker/php/conf.d/20-opcache.ini`: production OPcache settings (`enable_cli=1` required for Octane)
+- `docker/php/conf.d/10-php.ini`: base production PHP settings (`max_execution_time=0` — Octane is a long-lived process)
+- `docker/php/conf.d/20-opcache.ini`: production OPcache settings (`enable_cli=1` required for Octane; `jit=0` + `jit_buffer_size=0` — JIT off by default, override both in the consuming service)
 - `docker/php/conf.d/30-swoole.ini`: `swoole.use_shortname=Off`
 
 ## Build
@@ -74,7 +73,7 @@ The pipeline performs:
 
 - Dockerfile lint with Hadolint
 - Docker image build
-- PHP extension smoke checks for `pdo_pgsql`, `rdkafka`, `redis`, `swoole`, `pcntl`, `sockets`
+- PHP extension smoke checks for `pdo_pgsql`, `redis`, `swoole`, `pcntl`, `sockets`
 - Trivy HIGH/CRITICAL image vulnerability scan
 - Registry push from the default branch
 
@@ -85,7 +84,7 @@ FROM <github-host>/<github-project>/<image-path>:latest
 
 COPY --chown=www-data:www-data . .
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader
 
 USER www-data
 ```

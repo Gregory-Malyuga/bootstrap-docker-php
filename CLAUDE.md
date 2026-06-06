@@ -29,7 +29,7 @@ docker run --rm php-octane-base:local php -r "echo swoole_version();"
 Single-stage `Dockerfile` based on `php:8.5-cli-alpine`:
 
 1. Alpine runtime packages + build-only `.build-deps` virtual group (removed after compilation)
-2. PHP extensions: `pcntl` + `pdo_pgsql` + `sockets` (compiled), `rdkafka` + `redis` + `swoole` (PECL), optional `pcov` via `--build-arg INSTALL_PCOV=1`
+2. PHP extensions: `pcntl` + `pdo_pgsql` + `sockets` (compiled), `redis` + `swoole` (PECL), optional `pcov` via `--build-arg INSTALL_PCOV=1`
 3. Composer 2 copied from the official `composer:2` image
 4. Config files from `docker/php/` copied into the image
 5. Final user: `www-data`; port `8000`; healthcheck via HTTP `GET /up`
@@ -38,7 +38,7 @@ Single-stage `Dockerfile` based on `php:8.5-cli-alpine`:
 **Key invariants:**
 - `opcache.enable_cli=1` — required because Octane is a CLI process; without this OPcache is completely inactive
 - `opcache.validate_timestamps=0` — timestamps never checked at runtime; rebuild the container to pick up code changes
-- `opcache.jit=0` — JIT disabled for the base image; consuming services may enable it if they have profiling data
+- `opcache.jit=0` + `opcache.jit_buffer_size=0` — JIT disabled for the base image; consuming services may enable it by overriding both values (e.g. `jit=tracing`, `jit_buffer_size=128M`); without explicit `jit_buffer_size` PHP emits a warning when JIT is turned on
 - `swoole.use_shortname=Off` — prevents Swoole from registering `go()`, `chan()`, etc. in the global namespace
 
 ## Extending in a service
@@ -48,7 +48,7 @@ FROM <github-host>/<github-project>/<image-path>:latest
 
 COPY --chown=www-data:www-data . .
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader
 
 USER www-data
 ```
