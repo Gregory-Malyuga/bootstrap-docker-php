@@ -24,11 +24,6 @@ Installed explicitly:
 
 FrankenPHP itself is part of the base image (`dunglas/frankenphp`) — no separate extension needed.
 
-Optional for local dev/test builds:
-
-- `pcov` when built with `--build-arg INSTALL_PCOV=1`
-- `xdebug` when built with `--build-arg INSTALL_XDEBUG=1`
-
 Provided by the upstream PHP image:
 
 - `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `iconv`, `json`, `mbstring`, `openssl`, `phar`, `simplexml`, `tokenizer`, `xml`, `Zend OPcache`
@@ -44,28 +39,6 @@ Provided by the upstream PHP image:
 docker build -t php-octane-base:local .
 ```
 
-Build with pcov for local coverage runs:
-
-```bash
-docker build --build-arg INSTALL_PCOV=1 -t php-octane-base:coverage .
-```
-
-Build with xdebug for local debugging:
-
-```bash
-docker build --build-arg INSTALL_XDEBUG=1 -t php-octane-base:dev .
-```
-
-In a consuming service's `docker-compose.yml`:
-
-```yaml
-services:
-  php:
-    build:
-      args:
-        INSTALL_PCOV: "1"
-```
-
 ## Smoke checks
 
 ```bash
@@ -74,7 +47,7 @@ docker run --rm php-octane-base:local php --version
 docker run --rm php-octane-base:local php -r "echo swoole_version();"
 ```
 
-## GitLab CI
+## GitHub CI
 
 The pipeline performs:
 
@@ -87,7 +60,7 @@ The pipeline performs:
 ## Use in a service image
 
 ```dockerfile
-FROM <github-host>/<github-project>/<image-path>:latest
+FROM ghcr.io/gregory-malyuga/bootstrap-docker-php:latest
 
 COPY --chown=www-data:www-data . .
 

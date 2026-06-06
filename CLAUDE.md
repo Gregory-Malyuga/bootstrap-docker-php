@@ -12,13 +12,6 @@ A production-oriented Laravel Octane + FrankenPHP base Docker image for PHP micr
 # Standard build
 docker build -t php-octane-base:local .
 
-# Build with pcov for coverage support
-docker build --build-arg INSTALL_PCOV=1 -t php-octane-base:coverage .
-
-# Build with xdebug for local debugging
-docker build --build-arg INSTALL_XDEBUG=1 -t php-octane-base:dev .
-```
-
 ## Smoke checks (run after every build)
 
 ```bash
@@ -32,7 +25,7 @@ docker run --rm php-octane-base:local php -r "echo PHP_VERSION;"
 Single-stage `Dockerfile` based on `dunglas/frankenphp:1.12-php8.5-alpine`:
 
 1. Alpine runtime packages + build-only `.build-deps` virtual group (removed after compilation)
-2. PHP extensions: `pcntl` + `pdo_pgsql` + `sockets` (compiled), `redis` (PECL), optional `pcov` via `--build-arg INSTALL_PCOV=1`, optional `xdebug` via `--build-arg INSTALL_XDEBUG=1`
+2. PHP extensions: `pcntl` + `pdo_pgsql` + `sockets` (compiled), `redis` (PECL)
 3. Composer 2 copied from the official `composer:2` image
 4. Config files from `docker/php/` copied into the image
 5. Final user: `www-data`; port `8000`; healthcheck via HTTP `GET /up`
@@ -46,7 +39,7 @@ Single-stage `Dockerfile` based on `dunglas/frankenphp:1.12-php8.5-alpine`:
 ## Extending in a service
 
 ```dockerfile
-FROM <github-host>/<github-project>/<image-path>:latest
+FROM ghcr.io/gregory-malyuga/bootstrap-docker-php:latest
 
 COPY --chown=www-data:www-data . .
 
