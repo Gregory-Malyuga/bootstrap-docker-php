@@ -5,11 +5,21 @@ on:
   pull_request:
 
 env:
-  IMAGE_TAG: ghcr.io/${{ github.repository }}:${{ github.sha }}
-  IMAGE_LATEST: ghcr.io/${{ github.repository }}:latest
   DOCKER_BUILDKIT: "1"
 
 jobs:
+  prep:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.img.outputs.image_tag }}
+      image_latest: ${{ steps.img.outputs.image_latest }}
+    steps:
+      - id: img
+        run: |
+          repo=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "image_tag=ghcr.io/$repo:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "image_latest=ghcr.io/$repo:latest" >> "$GITHUB_OUTPUT"
+
   lint:
     runs-on: ubuntu-latest
     container: hadolint/hadolint:latest-alpine
@@ -19,6 +29,9 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    needs: prep
+    env:
+      IMAGE_TAG: ${{ needs.prep.outputs.image_tag }}
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t "$IMAGE_TAG" .
@@ -31,7 +44,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [prep, build]
+    env:
+      IMAGE_TAG: ${{ needs.prep.outputs.image_tag }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -61,11 +76,14 @@ jobs:
 
   push:
     runs-on: ubuntu-latest
-    needs: [build, test, scan]
+    needs: [prep, build, test, scan]
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     permissions:
       contents: read
       packages: write
+    env:
+      IMAGE_TAG: ${{ needs.prep.outputs.image_tag }}
+      IMAGE_LATEST: ${{ needs.prep.outputs.image_latest }}
     steps:
       - uses: actions/download-artifact@v4
         with:
