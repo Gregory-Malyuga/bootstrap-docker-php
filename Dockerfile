@@ -14,6 +14,7 @@ WORKDIR /var/www/app
 
 RUN apk upgrade --no-cache \
     && apk add --no-cache \
+        brotli-libs \
         ca-certificates \
         git \
         libpq \
@@ -22,6 +23,7 @@ RUN apk upgrade --no-cache \
         unzip \
     && apk add --no-cache --virtual .build-deps \
         $PHPIZE_DEPS \
+        brotli-dev \
         linux-headers \
         openssl-dev \
         postgresql-dev \
