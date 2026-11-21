@@ -1,48 +1,37 @@
-FROM dunglas/frankenphp:1-php8.5-alpine
+FROM serversideup/php:8.5-frankenphp-alpine
 
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+# Переключаемся на root только для установки системных утилит и настройки прав
+USER root
 
+# Включаем встроенную поддержку Laravel Octane + FrankenPHP
 ENV APP_ENV=prod \
+    AUTORUN_ENABLED=true \
+    AUTORUN_LARAVEL_OCTANE=true \
+    OCTANE_SERVER=frankenphp \
+    FRANKENPHP_CONFIG="worker ./public/index.php" \
+    PHP_OPCACHE_ENABLE=1 \
     COMPOSER_ALLOW_SUPERUSER=1 \
     COMPOSER_HOME=/tmp/composer \
     COMPOSER_NO_INTERACTION=1 \
     COMPOSER_PROCESS_TIMEOUT=600
 
-WORKDIR /var/www/app
+WORKDIR /var/www/html
 
+# Устанавливаем недостающие системные пакеты (git, unzip, tzdata и др.)
 RUN apk upgrade --no-cache \
     && apk add --no-cache \
-        ca-certificates \
         git \
-        libpq \
-        openssl \
         tzdata \
         unzip \
-    && apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS \
-        linux-headers \
-        postgresql-dev \
-    && docker-php-ext-install -j"$(nproc)" \
-        pcntl \
-        pdo_pgsql \
-        sockets \
-    && pecl install \
-        redis \
-    && docker-php-ext-enable \
-        redis \
-    && apk del .build-deps \
-    && rm -rf /tmp/pear ~/.pearrc \
-    && chown www-data:www-data /var/www/app
+    && chown -R www-data:www-data /var/www/html
 
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
-
+# Копируем ваши кастомные настройки PHP
 COPY docker/php/conf.d/*.ini /usr/local/etc/php/conf.d/
 
+# Возвращаемся к непривилегированному пользователю
 USER www-data
 
-EXPOSE 8000
+EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-    CMD wget -qO- http://127.0.0.1:8000/up || exit 1
-
-CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8000"]
+    CMD wget -qO- http://127.0.0 || exit 1
