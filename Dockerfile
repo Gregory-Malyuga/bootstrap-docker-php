@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1-php8.6-alpine
+FROM dunglas/frankenphp:1-php8.5-alpine
 
 SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
