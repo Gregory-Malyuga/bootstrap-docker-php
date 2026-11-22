@@ -6,7 +6,7 @@ The image ships PHP with FrankenPHP and a curated set of runtime extensions. It 
 
 ## Runtime contract
 
-- `dunglas/frankenphp:1.12-php8.5-alpine` base
+- `serversideup/php:8.5-frankenphp-alpine` base
 - `APP_ENV=prod` by default (override at runtime with `-e APP_ENV=...`)
 - Composer 2
 - Octane (FrankenPHP) on port `8000`
@@ -18,11 +18,10 @@ The image ships PHP with FrankenPHP and a curated set of runtime extensions. It 
 Installed explicitly:
 
 - `pcntl` — signal handling for graceful shutdown / Octane reload
-- `sockets` — required by PHP networking internals
 - `pdo_pgsql`
 - `redis`
 
-FrankenPHP itself is part of the base image (`dunglas/frankenphp`) — no separate extension needed.
+FrankenPHP itself is part of the base image. The upstream image does not include the `sockets` extension.
 
 Provided by the upstream PHP image:
 
@@ -42,9 +41,8 @@ docker build -t php-octane-base:local .
 ## Smoke checks
 
 ```bash
-docker run --rm php-octane-base:local php -m
-docker run --rm php-octane-base:local php --version
-docker run --rm php-octane-base:local php -r "echo swoole_version();"
+docker run --rm --entrypoint php php-octane-base:local -m
+docker run --rm --entrypoint php php-octane-base:local --version
 ```
 
 ## GitHub CI
@@ -53,9 +51,11 @@ The pipeline performs:
 
 - Dockerfile lint with Hadolint
 - Docker image build
-- PHP extension smoke checks for `pdo_pgsql`, `redis`, `pcntl`, `sockets`
-- Trivy HIGH/CRITICAL image vulnerability scan
+- PHP extension smoke checks for `pdo_pgsql`, `redis`, `pcntl`
+- non-blocking Trivy HIGH/CRITICAL image vulnerability report
 - Registry push from the default branch
+
+The workflow also runs weekly, pulling the current upstream image and rebuilding before publishing. Dependabot checks Docker and GitHub Actions versions weekly. Upstream vulnerability findings stay visible in the scan job without blocking publication.
 
 ## Use in a service image
 
