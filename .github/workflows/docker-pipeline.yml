@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     container: hadolint/hadolint:latest-alpine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: hadolint Dockerfile
 
   build:
@@ -36,7 +36,7 @@ jobs:
     env:
       IMAGE_TAG: ${{ needs.prep.outputs.image_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: docker build --pull -t "$IMAGE_TAG" .
       - run: docker save "$IMAGE_TAG" -o image.tar
       - uses: actions/upload-artifact@v4
