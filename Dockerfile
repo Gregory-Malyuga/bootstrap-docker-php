@@ -1,7 +1,7 @@
 FROM serversideup/php:8.5-frankenphp-alpine
 
 # Переключаемся на root только для установки системных утилит и настройки прав
-USER root
+USER 0
 
 # Включаем встроенную поддержку Laravel Octane + FrankenPHP
 ENV APP_ENV=prod \
@@ -29,9 +29,9 @@ RUN apk upgrade --no-cache \
 COPY docker/php/conf.d/*.ini /usr/local/etc/php/conf.d/
 
 # Возвращаемся к непривилегированному пользователю
-USER www-data
+USER 82
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
-    CMD wget -qO- http://127.0.0 || exit 1
+    CMD ["sh", "-c", "wget -qO- http://127.0.0 || exit 1"]
