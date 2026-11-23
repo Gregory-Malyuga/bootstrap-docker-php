@@ -1,4 +1,4 @@
-FROM serversideup/php:8.5-frankenphp-alpine
+FROM serversideup/php:8.6-frankenphp-alpine
 
 # Переключаемся на root только для установки системных утилит и настройки прав
 USER 0
